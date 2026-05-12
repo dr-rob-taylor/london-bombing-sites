@@ -1,0 +1,12 @@
+---
+title: "About"
+output: html_document
+---
+
+It was the morning of 13 June 1944 when the Nazi regime launched their new Vergeltungswaffe 1 -- or Vengeance Weapon 1 (V1) -- toward London. During the following nine months, a further 2,300+ flying bombs fell on London, killing an estimated 5,500 people.
+
+### Data Sources
+
+This application has integrated various data sources. A huge debt of graditude is given to Liam Shaw and Luke Shaw for their efforts in compiling the map reference data and making this available. Their paper and analysis can be found here.
+
+Incident report data was sourced and compiled from www.flyingbombsandrockets.com. This data manually matched to the map reference data. This was done by cross-referencing the location and reference data. This did not always lead to a match, and some matches are fuzzy. Any errors in the data contained in the application are therefore mine.

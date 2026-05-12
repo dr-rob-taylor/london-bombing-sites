@@ -22,133 +22,103 @@ get_info <- function(id){
   
   withTags(
     tagList(
-      div( class = "info-container",
-        div( class = "d-flex flex-row ",
-          div(
-            label(span( class = "field-name", "ID")),
-            p(ID)
-          ),
-          div( class = "ms-5",
-            label(span( class = "field-name", "Reference")),
-            p(REF)
-          )
-        ),
-        div( class = "d-flex flex-row",
-          div(
-            label(span( class = "field-name", "Area")),
-            p(AREA)
-          ),
-          div( class = "ms-5",
-            label(span( class = "field-name", "Borough")),
-            p(BOROUGH)
-          ),
-          div( class = "ms-5",
-            label(span( class = "field-name", "Post Code")),
-            p(POSTCODE)
-          )
-        ),
-        div( class = "d-flex flex-row",
-          div(
-            label(span( class = "field-name", "Date")),
-            p(DATE)
-          ),
-          div( class = "ms-4",
-            label(span( class = "field-name", "Time")),
-            p(TIME)
-          )
-        ),
-        div(
-          label( span( class = "field-name", "Fatalities")),
-          p(FATALITIES)
-        ),
-        div(
-          label( span( class = "field-name", "Position")),
-          p(POS)
-        ),
-        div(
-          label( span( class = "field-name", "Notes")),
-          p(NOTES)
-        )
+      table(
+        tr( th("ID"), td(ID) ),
+        tr( th("Reference"), td(REF) ),
+        tr( th("Area"), td(AREA) ),
+        tr( th("Borough"), td(BOROUGH) ),
+        tr( th("Post Code"), td(POSTCODE) ),
+        tr( th("Date"), td(DATE) ),
+        tr( th("Time"), td(TIME) ),
+        tr( th("Fatalities"), td(FATALITIES) ),
+        tr( th("Position"), td(POS) ),
+        tr( th("Notes"), td(NOTES) )
       )
     )
   )
-  
 }
 
-ui <- page_fluid(
-  
-  tags$head(
-    tags$style('
-        .field-name {
-          font-weight: 600;
-        }  
+ui <- withTags(
+  tagList(
+    
+    tags$head(
+      tags$style('
         
-        .info-container {
+        table {
+          border-collapse: collapse;
+          width: 100%;
           font-size: .9em;
         }
+        
+        td, th {
+          text-align: left;
+          padding: .35em;
+        }
+        
+        th {
+          vertical-align: top;
+        }
+        
     ')
-  ),
-  
-  theme = bs_theme(version = 5),
-  
-  title = "Bombs",
-  
-  titlePanel("Title"),
-  
-  leafletOutput("map", height = "600px"),
-  
-  tags$div(
-    class = "offcanvas offcanvas-end",
-    tabindex = "-1",
-    id = "info_panel",
-    tags$div(class = "offcanvas-header",
-             tags$h4(class="offcanvas-title", "Details"),
-             tags$button(type="button", class="btn-close", `data-bs-dismiss`="offcanvas")
     ),
-    tags$div(class = "offcanvas-body",
-             uiOutput("panel_content")
-    )
-  ),
-  
-  tags$script(HTML("
-  Shiny.addCustomMessageHandler('openOffcanvas', function(Name) {
-    var el = document.getElementById(Name);
-    var bsOffcanvas = new bootstrap.Offcanvas(el);
-    bsOffcanvas.show();
-  });
-"))
+    
+    page_navbar(
+      
+      #theme = bs_theme(bootswatch = "cosmo"),
+      navbar_options = navbar_options(
+        theme = "dark"
+      ),
+      
+      title = "Flying Bomb Attacks on London",
+      footer = footer(
+        p("Rob Taylor")
+      ),
+      
+      # ------------------------------------------------------------------------
+      # ABOUT
+      nav_panel(
+        title = "About",
+        uiOutput("about")
+      ),
+      
+      # ------------------------------------------------------------------------
+      # MAP
+      nav_panel(
+        title = "Map",
+        leafletOutput("map", height = "600px"),
+        
+        tags$div(
+          class = "offcanvas offcanvas-end",
+          tabindex = "-1",
+          id = "info_panel",
+          tags$div(class = "offcanvas-header",
+                   tags$h4(class="offcanvas-title", "Details"),
+                   tags$button(type="button", class="btn-close", `data-bs-dismiss`="offcanvas")
+          ),
+          tags$div(class = "offcanvas-body",
+                   uiOutput("panel_content")
+          )
+        )
+      )
+    ),
+    
+    # --------------------------------------------------------------------------
+    tags$script(HTML("
+      Shiny.addCustomMessageHandler('openOffcanvas', function(Name) {
+        var el = document.getElementById(Name);
+        var bsOffcanvas = new bootstrap.Offcanvas(el);
+        bsOffcanvas.show();
+      });
+    "))
+  )
 )
-
-# ui <- fluidPage(
-#   titlePanel("Capture Map Clicks for Lat/Lng"),
-#   sidebarLayout(
-#     sidebarPanel(
-#       h4("Latest Click Coordinates:"),
-#       textOutput("coords")  # Text output to display lat/lng
-#     ),
-#     mainPanel(
-#       leafletOutput("map", height = "600px"),
-#     )
-#   ),
-#   
-#   tags$div(
-#     class = "offcanvas offcanvas-end",
-#     tabindex = "-1",
-#     id = "info_panel",
-#     tags$div(class = "offcanvas-header",
-#              tags$h5(class = "offcanvas-title" ,"Details"),
-#              tags$button(type="button", class="btn-close", `data-bs-dismiss`="offcanvas")
-#     ),
-#     tags$div(class = "offcanvas-body",
-#              uiOutput("panel_content")
-#     )
-#   ),
-#   
-# 
-# )
 
 server <- function(session, input, output) {
   # Render the initial map
+  
+  output$about <- renderUI({
+    includeMarkdown("about.Rmd")
+  })
   
   output$map <- renderLeaflet({
     
@@ -171,51 +141,15 @@ server <- function(session, input, output) {
   
   observeEvent(input$map_marker_click, {
     click <- input$map_marker_click
-    #print(click$id)
     
     req(click$id)
     
-    #selected <- sl_data[sl_data$Name == click$id, ]
     selected <- get_info(id = click$id)
-    
-    output$panel_content <- renderUI({
-      selected
-      # tagList(
-      #   h5(selected$Name),
-      #   hr(),
-      #   p(selected$Description),
-      #   p(click$lng, click$lat)
-      # )
-    })
+    output$panel_content <- renderUI( selected )
     
     # Open offcanvas via JS
     session$sendCustomMessage("openOffcanvas", "info_panel")
   })
-  
-  # # Print click coordinates to the console
-  # observeEvent(input$map_click, {
-  #   click <- input$map_click
-  #   print(paste("Latitude:", click$lat, "Longitude:", click$lng))
-  # })
-  # 
-  # # Display latest click coordinates as text
-  # output$coords <- renderText({
-  #   req(input$map_click)  # Wait for a click before rendering
-  #   click <- input$map_click
-  #   paste0("Latitude: ", round(click$lat, 4), "\nLongitude: ", round(click$lng, 4))
-  # })
-  
-  # # Add a popup at the click location
-  # observeEvent(input$map_click, {
-  #   click <- input$map_click
-  #   leafletProxy("map") %>%  # Update the existing "map"
-  #     clearPopups() %>%  # Clear previous popups (optional)
-  #     addPopups(
-  #       lng = click$lng,
-  #       lat = click$lat,
-  #       popup = paste0("Lat: ", round(click$lat, 4), "<br>Lng: ", round(click$lng, 4))
-  #     )
-  # })
 }
 
 shinyApp(ui, server)
